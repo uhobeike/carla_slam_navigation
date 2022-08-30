@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Arguments -->
+  <arg name="move_forward_only"     default="false"/>
+  <arg name="mcl_map_file"          default="$(find carla_slam)/config/maps/map.yaml"/>
+  <arg name="navigation_map_file"   default="$(find carla_slam)/config/maps/map_move_base.yaml"/>
+  <arg name="navigation_map_topic"  default="/navigation_map"/>
+
+  <arg name="navigation"            default="move_base" doc="navigation type [move_base]"/>
+
+  <!-- Map server -->
+  <node pkg="map_server" name="mcl_map_server" type="map_server" args="$(arg mcl_map_file)"/>
+
+  <node pkg="map_server" name="move_base_map_server" type="map_server" args="$(arg navigation_map_file)">
+    <remap from="map"         to="$(arg navigation_map_topic)"/>
+    <remap from="static_map"  to="/navigation_static_map"/>
+  </node>
+
+  <node pkg="nodelet" type="nodelet" name="pointcloud_to_laserscan"
+        args="standalone velodyne_laserscan/LaserScanNodelet">
+		<remap from="velodyne_points" to="hdl64_points"/>
+		
+    <param name="ring" value="$(arg ring)"/>
+    <param name="resolution" value="$(arg resolution)"/>
+  </node>
+  
+  <!-- Amcl -->
+  <include file="$(find carla_navigation)/launch/amcl.launch">
+    <arg name="initial_pose_x" value="0.0"/>
+    <arg name="initial_pose_y" value="0.0"/>
+    <arg name="initial_pose_a" value="0.0"/>
+  </include>
+
+	<!-- <node pkg="carla_twist_to_control" type="carla_twist_to_control.py" name="carla_twist_to_control" output="screen"/> -->
+
+  <!-- Move base -->
+  <group if="$(eval navigation=='move_base')">
+    <include file="$(find carla_navigation)/launch/move_base.launch">
+      <arg name="move_forward_only" value="$(arg move_forward_only)"/>
+    </include>
+  </group>
+</launch>

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+  <!-- Arguments -->
+  <arg name="map_file" default="$(find carla_slam)/config/maps/map"/>
+
+  <!-- Map server -->
+  <node pkg="map_server" name="map_saver" type="map_saver" 
+    args="-f $(arg map_file)" required="true" output="screen"/>
+</launch>
